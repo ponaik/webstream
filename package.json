@@ -7,10 +7,12 @@
     "serve": "vite preview"
   },
   "devDependencies": {
+    "video.js": "^8.23.3",
     "vite": "^7.0.0",
     "vite-plugin-mkcert": "^1.17.8"
   },
   "dependencies": {
-    "firebase": "^11.9.1"
+    "firebase": "^11.9.1",
+    "videojs-hls-quality-selector": "^2.0.0"
   }
 }
