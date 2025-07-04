@@ -1,4 +1,4 @@
-// import './style.css';
+import './style.css';
 
 import { initializeApp } from "firebase/app";
 import {
@@ -11,6 +11,10 @@ import {
   updateDoc,
   onSnapshot
 } from "firebase/firestore";
+import player from "./main-video.js";
+
+console.log(player);
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyCjrCJrtitnVRUavqBuVBjkt-KDIyHO3cQ",
@@ -38,6 +42,7 @@ const servers = {
 const pc = new RTCPeerConnection(servers);
 let localStream = null;
 let remoteStream = null;
+let eventsChannel = null;
 
 // HTML elements
 const webcamButton = document.getElementById('webcamButton');
@@ -47,6 +52,8 @@ const callInput = document.getElementById('callInput');
 const answerButton = document.getElementById('answerButton');
 const remoteVideo = document.getElementById('remoteVideo');
 const hangupButton = document.getElementById('hangupButton');
+const chatButton = document.getElementById('chatButton');
+const sendButton = document.getElementById('send');
 
 // 0. Setup my asshole
 
@@ -87,6 +94,72 @@ webcamButton.onclick = async () => {
   answerButton.disabled = false;
   webcamButton.disabled = true;
 };
+
+// Emitting an event
+function emitEvent(type, payload) {
+  if (eventsChannel) {
+    console.log("Sending event: ", type);
+    eventsChannel.send(JSON.stringify({ type, payload }));
+  }
+}
+
+let isSyncSeek = false;
+
+function handleEvent(event) {
+  let { type, payload } = JSON.parse(event.data);
+
+  console.log("Received event: ", type, payload);
+
+  switch (type) {
+    case 'pause':
+      player.pause();
+      break;
+    case 'play':
+      player.play();
+      break;
+    case 'seeked':
+      if (isSyncSeek) {
+        isSyncSeek = false; // reset flag
+        break; // skip logic to avoid loop
+      }
+
+      // Now do your logic
+      isSyncSeek = true;
+      player.currentTime(payload['time']);
+      break;
+    default:
+      console.log("It's dicks isn't it. (it's: ", type, ")");
+      break;
+  }
+}
+
+player.on('play', () => emitEvent('play'));
+player.on('pause', () => emitEvent('pause'));
+player.on('seeked', () => emitEvent('seeked', {'time': player.currentTime()}));
+
+// video.onplay = (e) => {
+//   emitEvent('play');
+// }
+
+// video.onpause = (e) => {
+//   emitEvent('pause');
+// }
+
+
+
+// event channel creation
+chatButton.onclick = () => {
+  eventsChannel = pc.createDataChannel('events', {
+    ordered: false
+  });
+
+  eventsChannel.onopen = () => console.log('Events channel open');
+  eventsChannel.onmessage = handleEvent;
+}
+
+sendButton.onclick = () => {
+  emitEvent("dicks", {one: "two"});
+}
 
 remoteStream = new MediaStream();
 
@@ -146,10 +219,15 @@ callButton.onclick = async () => {
       if (change.type === "added") {
         const candidate = new RTCIceCandidate(change.doc.data());
         pc.addIceCandidate(candidate);
+
+        console.log("Added new answer canditate");
       }
     })
   });
 
+
+  
+  
   hangupButton.disabled = false;
 };
 
@@ -198,4 +276,13 @@ answerButton.onclick = async () => {
       }
     });
   });
+
+  
+  // Event channel connect
+
+  pc.ondatachannel = event => {
+    eventsChannel = event.channel;
+    eventsChannel.onopen    = () => console.log('Channel opened');
+    eventsChannel.onmessage = handleEvent;
+  };
 };

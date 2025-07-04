@@ -15,6 +15,8 @@ var player = videojs('my-video', {
     }
 });
 
+// player.handleKeyDown()
+
 player.src({
   src: 'http://localhost:8000/master.m3u8',
   type: 'application/x-mpegURL'
@@ -36,6 +38,8 @@ player.ready(function () {
       displayCurrentQuality: true
     });
 });
+
+export default player;
 
 
 // player.play();t
