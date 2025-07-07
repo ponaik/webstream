@@ -88,17 +88,24 @@ webcamButton.onclick = async () => {
 // Emitting an event
 function emitEvent(type, payload) {
   if (eventsChannel) {
+    if (Date.now() - lastEventMillis < eventTimeoutPeriod) {
+      console.log("Emit event aborted for: ", type);
+      return;
+    }
+
     console.log("Sending event: ", type);
     eventsChannel.send(JSON.stringify({ type, payload }));
   }
 }
 
-let isSyncSeek = false;
+let isUserSeeked = true;
+let lastEventMillis = Date.now();
+const eventTimeoutPeriod = 100;
 
 function handleEvent(event) {
   let { type, payload } = JSON.parse(event.data);
-
   console.log("Received event: ", type, payload);
+  lastEventMillis = Date.now();
 
   switch (type) {
     case 'pause':
@@ -108,14 +115,19 @@ function handleEvent(event) {
       player.play();
       break;
     case 'seeked':
-      if (isSyncSeek) {
-        isSyncSeek = false; // reset flag
-        break; // skip logic to avoid loop
+      // isUserSeeked = false;
+      const wasPlaying = !player.paused();
+      
+      if (wasPlaying) {
+        player.pause();
       }
 
-      // Now do your logic
-      isSyncSeek = true;
       player.currentTime(payload['time']);
+
+      if (wasPlaying) {
+        player.play();
+      }
+
       break;
     default:
       console.log("It's dicks isn't it. (it's: ", type, ")");
@@ -125,7 +137,15 @@ function handleEvent(event) {
 
 player.on('play', () => emitEvent('play'));
 player.on('pause', () => emitEvent('pause'));
+// player.on('seeked', () => {
+//   console.log("Seeked detected");
+//   if (isUserSeeked) {
+//     emitEvent('seeked', {'time': player.currentTime()});
+//   }
+//   isUserSeeked = true;
+// });
 player.on('seeked', () => emitEvent('seeked', {'time': player.currentTime()}));
+
 
 // video.onplay = (e) => {
 //   emitEvent('play');

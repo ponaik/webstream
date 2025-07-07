@@ -79,9 +79,7 @@ player.ready(function () {
             },
             syncKey: {
                 key: (e) => e.code === "KeyS",
-                handler: () => {
-                    console.log('the sync is supposed to happen now');
-                }
+                handler: applySync
             },
         },
 	});
@@ -99,11 +97,24 @@ player.ready(function () {
     var myButtonDom = myButton.el();
     myButtonDom.innerHTML = '<span class="vjs-icon-spinner"></span>';
     myButton.controlText("My Cancel Button");
-    myButtonDom.onclick = function () { alert('Cancel Button Clicked!')};
+    myButtonDom.onclick = applySync;
 });
 
-export default player;
+const applySync = () => {
+    console.log("Sync is supposed to happen now !!");
+    
+    const wasPlaying = !player.paused();
+      
+    if (wasPlaying) {
+        player.pause();
+    }
 
+    player.trigger('seeked');
+
+    if (wasPlaying) {
+        player.play();
+    }
+}
 
 const applySubtitleOffset = (offset = 0) => {
     const textTracks = player.textTracks();
@@ -122,4 +133,4 @@ const applySubtitleOffset = (offset = 0) => {
     console.log("Subtitles offset: ", subtitleOffset);
 }
 
-// player.play();t
+export default player;
