@@ -12,19 +12,9 @@ import {
   onSnapshot
 } from "firebase/firestore";
 import player from "./main-video.js";
+import firebaseConfig from './firebase-config.js';
 
 console.log(player);
-
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCjrCJrtitnVRUavqBuVBjkt-KDIyHO3cQ",
-  authDomain: "chmek-98cb4.firebaseapp.com",
-  projectId: "chmek-98cb4",
-  storageBucket: "chmek-98cb4.firebasestorage.app",
-  messagingSenderId: "643239941853",
-  appId: "1:643239941853:web:bd63da1d41920ddedb6d34"
-
-};
 
 const app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
