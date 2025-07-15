@@ -45,6 +45,13 @@ const hangupButton = document.getElementById('hangupButton');
 const chatButton = document.getElementById('chatButton');
 const sendButton = document.getElementById('send');
 const dummyButton = document.getElementById('dummyButton');
+const copyButton = document.getElementById('copyButton');
+
+copyButton.onclick = () => {
+  const sourceText = callInput.value;
+  console.log(sourceText);
+  navigator.clipboard.writeText(sourceText);
+}
 
 // 0. Setup my asshole
 

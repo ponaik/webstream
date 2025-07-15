@@ -6,6 +6,7 @@ import 'videojs-hotkeys';
 // console.log(hlsQualitySelector)
 // videojs.registerPlugin('hlsQualitySelector', HlsQualitySelector);
 
+const OFFSET_STEP = 0.5;
 let subtitleOffset = 0;
 
 var player = videojs('my-video', {
@@ -63,13 +64,13 @@ player.ready(function () {
             subDelayUp: {
                 key: (e) => e.code === "KeyJ",
                 handler: () => {
-                    applySubtitleOffset(1);
+                    applySubtitleOffset(OFFSET_STEP);
                 }
             },
             subDelayDown: {
                 key: (e) => e.code === "KeyK",
                 handler: () => {
-                    applySubtitleOffset(-1);
+                    applySubtitleOffset(-OFFSET_STEP);
                 }
             },
             syncKey: {
