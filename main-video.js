@@ -28,6 +28,14 @@ player.src({
 
 
 player.ready(function () {
+    player.addRemoteTextTrack({
+        kind: 'subtitles',
+        label: 'English',
+        srclang: 'en',
+        // src: './hls/spongebob/subs_en.vtt',
+        src: 'http://localhost:8000/spongebob/subs_en.vtt',
+        default: true
+    }, false);
 
     player.hotkeys({
 		volumeStep: 0.1,
