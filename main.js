@@ -44,6 +44,7 @@ const remoteVideo = document.getElementById('remoteVideo');
 const hangupButton = document.getElementById('hangupButton');
 const chatButton = document.getElementById('chatButton');
 const sendButton = document.getElementById('send');
+const dummyButton = document.getElementById('dummyButton');
 
 // 0. Setup my asshole
 
@@ -52,6 +53,24 @@ document.addEventListener('keydown', (event) => {
 });
 
 // 1. Setup media sources
+
+dummyButton.onclick = () => {
+ const audioCtx = new AudioContext();
+  const dest     = audioCtx.createMediaStreamDestination();
+
+  // 2. (Optional) Insert a silent oscillator for constant audio frames
+  const oscillator = audioCtx.createOscillator();
+  oscillator.frequency.value = 0;      // inaudible
+  oscillator.connect(dest);
+  oscillator.start();
+
+  // 3. Extract the silent audio track
+  localStream = dest.stream;
+
+  localStream.getTracks().forEach((track) => {
+    pc.addTrack(track, localStream);
+  });
+}
 
 webcamButton.onclick = async () => {
   // localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -200,11 +219,14 @@ callButton.onclick = async () => {
   pc.onicecandidate = async (event) => {
     if (event.candidate) {
       await addDoc(offerCandidates, event.candidate.toJSON());
+
+      console.log("New local ICE: ", event.candidate.candidate);
     }
   };
 
   // Create and store offer
   const offerDescription = await pc.createOffer();
+  console.log("Created Offer description: ", offerDescription);
   await pc.setLocalDescription(offerDescription);
 
   const offer = {
@@ -230,7 +252,7 @@ callButton.onclick = async () => {
         const candidate = new RTCIceCandidate(change.doc.data());
         pc.addIceCandidate(candidate);
 
-        console.log("Added new answer canditate");
+        console.log("Added new remote ICE canditate: ", candidate.candidate);
       }
     })
   });
@@ -254,6 +276,8 @@ answerButton.onclick = async () => {
   pc.onicecandidate = async (event) => {
     if (event.candidate) {
       await addDoc(answerCandidatesRef, event.candidate.toJSON());
+
+      console.log("New local ICE: ", event.candidate.candidate);
     }
   };
 
@@ -267,6 +291,7 @@ answerButton.onclick = async () => {
 
   // Create and set local answer
   const answerDescription = await pc.createAnswer();
+  console.log("Created Answer description: ", answerDescription);
   await pc.setLocalDescription(answerDescription);
 
   const answer = {
@@ -281,8 +306,10 @@ answerButton.onclick = async () => {
   onSnapshot(offerCandidatesRef, (snapshot) => {
     snapshot.docChanges().forEach((change) => {
       if (change.type === "added") {
-        const data = change.doc.data();
-        pc.addIceCandidate(new RTCIceCandidate(data));
+        const candidate = new RTCIceCandidate(change.doc.data());
+        pc.addIceCandidate(candidate);
+
+        console.log("Added new remote ICE candidate: ", candidate.candidate);
       }
     });
   });
