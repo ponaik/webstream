@@ -112,12 +112,14 @@ webcamButton.onclick = async () => {
 };
 
 // Emitting an event
-function emitEvent(type, payload) {
+function emitEvent(type, payload={}) {
   if (eventsChannel) {
     if (Date.now() - lastEventMillis < eventTimeoutPeriod) {
       console.log("Emit event aborted for: ", type);
       return;
     }
+
+    payload['timestamp'] = Date.now();
 
     console.log("Sending event: ", type);
     eventsChannel.send(JSON.stringify({ type, payload }));
@@ -130,7 +132,8 @@ const eventTimeoutPeriod = 100;
 
 function handleEvent(event) {
   let { type, payload } = JSON.parse(event.data);
-  console.log("Received event: ", type, payload);
+  const transportTime = Date.now() - payload['timestamp'];
+  console.log(`Received event: ${type} in ${transportTime} ms, `, payload);
   lastEventMillis = Date.now();
 
   switch (type) {
@@ -155,10 +158,26 @@ function handleEvent(event) {
       }
 
       break;
+    case 'sanityCheck':
+      const localTime = player.currentTime();
+      const remoteTime = payload['currentTime'] + transportTime/1000;
+      const timeDiff = localTime - remoteTime;
+      console.log(`${Math.abs(timeDiff) > 2 ? '!!!!!!!!!':''} TimeDiff: ${timeDiff}`);
+      break;
     default:
       console.log("It's dicks isn't it. (it's: ", type, ")");
       break;
   }
+}
+
+function handleDataChannelOpen() {
+  setInterval(() => {
+    const payload = {
+      'currentTime': player.currentTime()
+    }
+    emitEvent('sanityCheck', payload);
+  }, 30 * 1000)
+  console.log('Events channel open');
 }
 
 player.on('play', () => emitEvent('play'));
@@ -189,7 +208,7 @@ chatButton.onclick = () => {
     ordered: false
   });
 
-  eventsChannel.onopen = () => console.log('Events channel open');
+  eventsChannel.onopen = handleDataChannelOpen;
   eventsChannel.onmessage = handleEvent;
 }
 
@@ -326,7 +345,7 @@ answerButton.onclick = async () => {
 
   pc.ondatachannel = event => {
     eventsChannel = event.channel;
-    eventsChannel.onopen    = () => console.log('Channel opened');
+    eventsChannel.onopen    = handleDataChannelOpen;
     eventsChannel.onmessage = handleEvent;
   };
 };
