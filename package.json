@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "firebase": "^11.9.1",
+    "socket.io-client": "^4.8.1",
     "video.js": "^8.23.3",
     "videojs-hotkeys": "^0.2.30"
   }

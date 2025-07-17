@@ -1,23 +1,17 @@
 import './style.css';
-
-import { initializeApp } from "firebase/app";
-import {
-  getFirestore,
-  collection,
-  doc,
-  setDoc,
-  getDoc,
-  addDoc,
-  updateDoc,
-  onSnapshot
-} from "firebase/firestore";
 import player from "./main-video.js";
-import firebaseConfig from './firebase-config.js';
+import { io } from 'socket.io-client';
+
+const socket = io('http://localhost:3000', {
+    transports: ['websocket', 'polling', 'flashsocket'],
+    cors: {
+        origin: "http://localhost:3000",
+        credentials: true
+    },
+    withCredentials: true
+});
 
 console.log(player);
-
-const app = initializeApp(firebaseConfig);
-const firestore = getFirestore(app);
 
 const servers = {
   iceServers: [
@@ -29,29 +23,20 @@ const servers = {
 };
 
 // Global State
-const pc = new RTCPeerConnection(servers);
+const peerConnection = new RTCPeerConnection(servers);
 let localStream = null;
 let remoteStream = null;
 let eventsChannel = null;
 
 // HTML elements
-const webcamButton = document.getElementById('webcamButton');
-const webcamVideo = document.getElementById('webcamVideo');
-const callButton = document.getElementById('callButton');
-const callInput = document.getElementById('callInput');
-const answerButton = document.getElementById('answerButton');
+const localVideo = document.getElementById('webcamVideo');
 const remoteVideo = document.getElementById('remoteVideo');
 const hangupButton = document.getElementById('hangupButton');
 const chatButton = document.getElementById('chatButton');
 const sendButton = document.getElementById('send');
-const dummyButton = document.getElementById('dummyButton');
-const copyButton = document.getElementById('copyButton');
 
-copyButton.onclick = () => {
-  const sourceText = callInput.value;
-  console.log(sourceText);
-  navigator.clipboard.writeText(sourceText);
-}
+remoteStream = new MediaStream();
+remoteVideo.srcObject = remoteStream;
 
 // 0. Setup my asshole
 
@@ -61,55 +46,21 @@ document.addEventListener('keydown', (event) => {
 
 // 1. Setup media sources
 
-dummyButton.onclick = () => {
- const audioCtx = new AudioContext();
-  const dest     = audioCtx.createMediaStreamDestination();
-
-  // 2. (Optional) Insert a silent oscillator for constant audio frames
-  const oscillator = audioCtx.createOscillator();
-  oscillator.frequency.value = 0;      // inaudible
-  oscillator.connect(dest);
-  oscillator.start();
-
-  // 3. Extract the silent audio track
-  localStream = dest.stream;
-
-  localStream.getTracks().forEach((track) => {
-    pc.addTrack(track, localStream);
+// event channel creation
+chatButton.onclick = () => {
+  eventsChannel = peerConnection.createDataChannel('events', {
+    ordered: false
   });
+
+  console.log("Event channel init attempt...");
+
+  eventsChannel.onopen = handleDataChannelOpen;
+  eventsChannel.onmessage = handleEvent;
 }
 
-webcamButton.onclick = async () => {
-  // localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-  localStream = await navigator.mediaDevices.getDisplayMedia({
-    video: {
-      frameRate: { ideal: 30, max: 60 },
-      width: { ideal: 1920 },
-      height: { ideal: 1080 }
-    },
-    audio: true
-  });
-  // remoteStream = new MediaStream();
-
-  // Push tracks from local stream to peer connection
-  localStream.getTracks().forEach((track) => {
-    pc.addTrack(track, localStream);
-  });
-
-  // // Pull tracks from remote stream, add to video stream
-  // pc.ontrack = (event) => {
-  //   event.streams[0].getTracks().forEach((track) => {
-  //     remoteStream.addTrack(track);
-  //   });
-  // };
-
-  webcamVideo.srcObject = localStream;
-  // remoteVideo.srcObject = remoteStream;
-
-  callButton.disabled = false;
-  answerButton.disabled = false;
-  webcamButton.disabled = true;
-};
+sendButton.onclick = () => {
+  emitEvent("dicks", {one: "two"});
+}
 
 // Emitting an event
 function emitEvent(type, payload={}) {
@@ -126,7 +77,6 @@ function emitEvent(type, payload={}) {
   }
 }
 
-let isUserSeeked = true;
 let lastEventMillis = Date.now();
 const eventTimeoutPeriod = 100;
 
@@ -144,7 +94,6 @@ function handleEvent(event) {
       player.play();
       break;
     case 'seeked':
-      // isUserSeeked = false;
       const wasPlaying = !player.paused();
       
       if (wasPlaying) {
@@ -182,170 +131,120 @@ function handleDataChannelOpen() {
 
 player.on('play', () => emitEvent('play'));
 player.on('pause', () => emitEvent('pause'));
-// player.on('seeked', () => {
-//   console.log("Seeked detected");
-//   if (isUserSeeked) {
-//     emitEvent('seeked', {'time': player.currentTime()});
-//   }
-//   isUserSeeked = true;
-// });
 player.on('seeked', () => emitEvent('seeked', {'time': player.currentTime()}));
 
 
-// video.onplay = (e) => {
-//   emitEvent('play');
-// }
 
-// video.onpause = (e) => {
-//   emitEvent('pause');
-// }
+// Socket.io-client handling webrtc connection
+socket.on('connect', () => {
+  console.log('Hello, successfully connected to the signaling server!');
+});
 
+socket.on("room_users", (users) => {
+  console.log("Current room users: ", users);
+  if (users.length) {
+    createOffer();
+  }
+});
 
+socket.on("getOffer", (sdp) => {
+  // console.log("get offer:", sdp);
+  console.log("Received offer");
+  createAnswer(sdp);
+});
 
-// event channel creation
-chatButton.onclick = () => {
-  eventsChannel = pc.createDataChannel('events', {
-    ordered: false
+socket.on("getAnswer", (sdp) => {
+  // console.log("Received answer: ", sdp);
+  console.log("Received answer: ");
+  peerConnection.setRemoteDescription(sdp);
+});
+
+socket.on("getCandidate", (candidate) => {
+  peerConnection.addIceCandidate(new RTCIceCandidate(candidate)).then(() => {
+    console.log("Added new remote ICE canditate: ", candidate.candidate);
   });
+});
 
-  eventsChannel.onopen = handleDataChannelOpen;
-  eventsChannel.onmessage = handleEvent;
-}
-
-sendButton.onclick = () => {
-  emitEvent("dicks", {one: "two"});
-}
-
-remoteStream = new MediaStream();
-
-// Pull tracks from remote stream, add to video stream
-pc.ontrack = (event) => {
-  event.streams[0].getTracks().forEach((track) => {
-    remoteStream.addTrack(track);
-  });
+const createOffer = () => {
+    console.log("Creating offer...");
+    peerConnection
+        .createOffer()
+        .then(sdp => {
+            peerConnection.setLocalDescription(sdp);
+            socket.emit("offer", sdp);
+        })
+        .catch(error => {
+            console.log(error);
+        });
 };
 
-remoteVideo.srcObject = remoteStream;
-
-// 2. Create an offer
-callButton.onclick = async () => {
-  // Reference Firestore collections for signaling
-  
-  // const callDoc = firestore.collection('calls').doc();
-  // const offerCandidates = callDoc.collection('offerCandidates');
-  // const answerCandidates = callDoc.collection('answerCandidates');
-  
-  const callDoc = doc(collection(firestore, "calls")); 
-  const offerCandidates = collection(callDoc, "offerCandidates");
-  const answerCandidates = collection(callDoc, "answerCandidates");
-
-  callInput.value = callDoc.id;
-
-  // Get ICE candidates for caller and save to Firestore
-  pc.onicecandidate = async (event) => {
-    if (event.candidate) {
-      await addDoc(offerCandidates, event.candidate.toJSON());
-
-      console.log("New local ICE: ", event.candidate.candidate);
-    }
-  };
-
-  // Create and store offer
-  const offerDescription = await pc.createOffer();
-  console.log("Created Offer description: ", offerDescription);
-  await pc.setLocalDescription(offerDescription);
-
-  const offer = {
-    sdp: offerDescription.sdp,
-    type: offerDescription.type,
-  };
-
-  await setDoc(callDoc, { offer });
-
-  // Listen for remote answer
-  onSnapshot(callDoc, (snapshot) => {
-    const data = snapshot.data();
-    if (!pc.currentRemoteDescription && data?.answer) {
-      const answerDescription = new RTCSessionDescription(data.answer);
-      pc.setRemoteDescription(answerDescription);
-    }
-  });
-
-  // When answered, add candidate to peer connection
-  onSnapshot(answerCandidates, (snapshot) => {
-    snapshot.docChanges().forEach((change) => {
-      if (change.type === "added") {
-        const candidate = new RTCIceCandidate(change.doc.data());
-        pc.addIceCandidate(candidate);
-
-        console.log("Added new remote ICE canditate: ", candidate.candidate);
-      }
-    })
-  });
-
-
-  
-  
-  hangupButton.disabled = false;
-};
-
-// 3. Answer the call with the unique ID
-answerButton.onclick = async () => {
-  const callId = callInput.value;
-
-  // Get references to call and its subcollections
-  const callDocRef = doc(firestore, "calls", callId);
-  const answerCandidatesRef = collection(callDocRef, "answerCandidates");
-  const offerCandidatesRef = collection(callDocRef, "offerCandidates");
-
-  // Save ICE candidates from callee
-  pc.onicecandidate = async (event) => {
-    if (event.candidate) {
-      await addDoc(answerCandidatesRef, event.candidate.toJSON());
-
-      console.log("New local ICE: ", event.candidate.candidate);
-    }
-  };
-
-  // Fetch call data
-  const callSnapshot = await getDoc(callDocRef);
-  const callData = callSnapshot.data();
-
-  // Set remote offer description
-  const offerDescription = callData.offer;
-  await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
-
-  // Create and set local answer
-  const answerDescription = await pc.createAnswer();
-  console.log("Created Answer description: ", answerDescription);
-  await pc.setLocalDescription(answerDescription);
-
-  const answer = {
-    type: answerDescription.type,
-    sdp: answerDescription.sdp,
-  };
-
-  // Save answer back to Firestore
-  await updateDoc(callDocRef, { answer });
-
-  // Listen for ICE candidates from the caller
-  onSnapshot(offerCandidatesRef, (snapshot) => {
-    snapshot.docChanges().forEach((change) => {
-      if (change.type === "added") {
-        const candidate = new RTCIceCandidate(change.doc.data());
-        pc.addIceCandidate(candidate);
-
-        console.log("Added new remote ICE candidate: ", candidate.candidate);
-      }
+const createAnswer = (sdp) => {
+    peerConnection.setRemoteDescription(sdp).then(() => {
+        console.log("Remote description set");
+        peerConnection
+            .createAnswer()
+            .then(sdp1 => {
+                console.log("Creating answer...");
+                peerConnection.setLocalDescription(sdp1);
+                socket.emit("answer", sdp1);
+            })
+            .catch(error => {
+                console.log(error);
+            });
     });
-  });
-
-  
-  // Event channel connect
-
-  pc.ondatachannel = event => {
-    eventsChannel = event.channel;
-    eventsChannel.onopen    = handleDataChannelOpen;
-    eventsChannel.onmessage = handleEvent;
-  };
 };
+
+async function init(e) {
+    console.log("init");
+    try {
+        navigator.mediaDevices
+            .getDisplayMedia({
+                video: true,
+                audio: true,
+            })
+            .then(stream => {
+                localVideo.srcObject = stream;
+
+                stream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, stream);
+                });
+                peerConnection.onicecandidate = e => {
+                    if (e.candidate) {
+                        console.log("New local ICE: ", e.candidate.candidate);
+                        socket.emit("candidate", e.candidate);
+                    }
+                };
+                peerConnection.oniceconnectionstatechange = e => {
+                    console.log("ICE state change: ", e.target);
+                };
+
+                peerConnection.ontrack = (event) => {
+                  event.streams[0].getTracks().forEach((track) => {
+                    remoteStream.addTrack(track);
+                  });
+                };
+
+                // channel isn't opening for some reason
+                peerConnection.ondatachannel = event => {
+                  eventsChannel = event.channel;
+                  eventsChannel.onopen    = handleDataChannelOpen;
+                  eventsChannel.onmessage = handleEvent;
+                };
+
+                socket.emit("join", {
+                    room: "1234",
+                    name: "skydoves@getstream.io",
+                });
+            })
+            .catch(error => {
+                console.log(`getUserMedia error: ${error}`);
+            });
+    } catch (e) {
+        console.log(e);
+    }
+}
+
+document.getElementById('join').addEventListener('click', e => init(e));
+
+
+

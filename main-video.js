@@ -21,8 +21,8 @@ var player = videojs('my-video', {
 // player.handleKeyDown()
 
 player.src({
-  src: 'http://localhost:8000/spongebob/master.m3u8',
-//   src: './hls/spongebob/master.m3u8',
+//   src: 'http://localhost:8000/spongebob/master.m3u8',
+  src: './hls/mulan/master.m3u8',
   type: 'application/x-mpegURL'
 //   withCredentials: true
 });
@@ -33,8 +33,8 @@ player.ready(function () {
         kind: 'subtitles',
         label: 'English',
         srclang: 'en',
-        // src: './hls/spongebob/subs_en.vtt',
-        src: 'http://localhost:8000/spongebob/subs_en.vtt',
+        // src: 'http://localhost:8000/spongebob/subs_en.vtt',
+        src: './hls/mulan/subs_en.vtt',
         default: true
     }, false);
 
@@ -83,12 +83,8 @@ player.ready(function () {
     let tracks = player.textTracks();
     console.log(tracks);
     
-    // player.on('seeked', () => {
-    //     setTimeout(() => applySubtitleOffset(), 1000);
-    // });
 
-
-
+    
     var myButton = player.controlBar.addChild('button', {}, 0);
     var myButtonDom = myButton.el();
     myButtonDom.innerHTML = '<span class="vjs-icon-spinner"></span>';
