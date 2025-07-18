@@ -24,11 +24,22 @@ const io = socketIo(server, {
 
 let rooms = {};
 let socketToRoom = {};
+const WATCHROOM = "watchroom";
 
 io.on("connection", socket => {
+
+    socket.join(WATCHROOM);
+
+    socket.on("playerEvent", (type, payload, callback) => {
+        callback(`dicks are at ${Math.round(Math.random()*100)}%`);
+
+        socket.broadcast.to(WATCHROOM).emit("getPlayerEvent", type, payload);
+        console.log("payerEvent: ", type, socket.id);
+    });
+
     socket.on("join", data => {
         // let a new user join to the room
-        const roomId = data.room
+        const roomId = data.room;
         socket.join(roomId);
         socketToRoom[socket.id] = roomId;
 

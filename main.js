@@ -64,8 +64,11 @@ sendButton.onclick = () => {
 
 // Emitting an event
 function emitEvent(type, payload={}) {
-  if (eventsChannel) {
-    if (Date.now() - lastEventMillis < eventTimeoutPeriod) {
+  // if (eventsChannel) {
+  //   eventsChannel.send(JSON.stringify({ type, payload }));
+  // }
+
+  if (Date.now() - lastEventMillis < eventTimeoutPeriod) {
       console.log("Emit event aborted for: ", type);
       return;
     }
@@ -73,15 +76,16 @@ function emitEvent(type, payload={}) {
     payload['timestamp'] = Date.now();
 
     console.log("Sending event: ", type);
-    eventsChannel.send(JSON.stringify({ type, payload }));
-  }
+    socket.emit("playerEvent", type, payload, (present) => {
+      console.log("callback from server ??? A present: ", present);
+    });
 }
 
 let lastEventMillis = Date.now();
 const eventTimeoutPeriod = 100;
 
-function handleEvent(event) {
-  let { type, payload } = JSON.parse(event.data);
+function handleEvent(type, payload) {
+  // let { type, payload } = JSON.parse(event.data);
   const transportTime = Date.now() - payload['timestamp'];
   console.log(`Received event: ${type} in ${transportTime} ms, `, payload);
   lastEventMillis = Date.now();
@@ -164,6 +168,8 @@ socket.on("getCandidate", (candidate) => {
     console.log("Added new remote ICE canditate: ", candidate.candidate);
   });
 });
+
+socket.on("getPlayerEvent", handleEvent);
 
 const createOffer = () => {
     console.log("Creating offer...");
