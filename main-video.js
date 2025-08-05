@@ -18,25 +18,54 @@ var player = videojs('my-video', {
     }
 });
 
+const sourceInput = document.getElementById('playerSrc');
+const typeInput = document.getElementById('playerSrcType');
+const selectButton = document.getElementById('playerSrcSelect');
+
+const applyPlayerSrc = (source) => {
+    try {
+        console.log("Trying src: ", source);
+
+        player.src({
+            src: source + 'master.m3u8', 
+            type: typeInput.value
+            //   withCredentials: true
+        });
+    
+        player.addRemoteTextTrack({
+            kind: 'subtitles',
+            label: 'English',
+            srclang: 'en',
+            src: source + 'subs_en.vtt',
+            default: true
+        }, false);
+
+        localStorage.setItem("playerSrc", source);
+    } catch (error) {
+        console.log("Wrong player src or something: ", error);
+    }
+} 
+
+const storedSrc = localStorage.getItem('playerSrc');
+
+if (storedSrc) {
+    applyPlayerSrc(storedSrc);
+}
+
 // player.handleKeyDown()
 
-player.src({
-//   src: 'http://localhost:8000/spongebob/master.m3u8',
-  src: './hls/mulan/master.m3u8',
-  type: 'application/x-mpegURL'
-//   withCredentials: true
-});
+selectButton.onclick = () => {
+    let source = sourceInput.value;
+    source += source.endsWith('/') ? '' : '/';
+    
+    applyPlayerSrc(source);
+};
+
+
+
 
 
 player.ready(function () {
-    player.addRemoteTextTrack({
-        kind: 'subtitles',
-        label: 'English',
-        srclang: 'en',
-        // src: 'http://localhost:8000/spongebob/subs_en.vtt',
-        src: './hls/mulan/subs_en.vtt',
-        default: true
-    }, false);
 
     player.hotkeys({
 		volumeStep: 0.1,
@@ -79,10 +108,6 @@ player.ready(function () {
             },
         },
 	});
-
-    let tracks = player.textTracks();
-    console.log(tracks);
-    
 
     
     var myButton = player.controlBar.addChild('button', {}, 0);
