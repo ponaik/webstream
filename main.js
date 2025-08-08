@@ -2,20 +2,30 @@ import './style.css';
 import player from "./main-video.js";
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:3000', {
+const PROD = import.meta.env.PROD;
+console.log(`Running prod: ${PROD}`);
+const wsURI = PROD 
+  ? 'wss://kek.bounceme.net'
+  : 'ws://localhost:3000';
+
+const socket = io(wsURI, {
+    path: '/ws',
+    timeout: 3000,
     transports: ['websocket', 'polling', 'flashsocket'],
-    cors: {
-        origin: "http://localhost:3000",
-        credentials: true
-    },
-    withCredentials: true
+    // cors: {
+    //     origin: wsURI,
+    //     credentials: true
+    // },
+    // withCredentials: true
 });
+
+if (socket.connected) {
+  console.log("Connected to websocket !!");
+}
 
 socket.on("getPlayerEvent", handleEvent);
 
 console.log(player);
-console.log(`Running dev: ${import.meta.env.DEV}`);
-
 
 // Emitting an event
 function emitEvent(type, payload={}) {

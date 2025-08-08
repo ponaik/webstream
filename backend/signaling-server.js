@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const https = require('https');
 const socketIo = require('socket.io')
 
 const app = express();
@@ -12,10 +14,21 @@ app.get('/', (req, res) => {
 const server = app.listen(3000, () => {
     console.log('server is running on http://localhost:3000')
 })
+// const server = https.createServer({
+//     cert: fs.readFileSync('D:/web/cert/site.crt.pem'),
+//     key:  fs.readFileSync('D:/web/cert/site.key.pem')
+// });
+
+// server.listen(443, () => {
+//   console.log('Listening for HTTPS + WSS on port 443');
+// });
 
 const io = socketIo(server, {
+    path: '/ws',
     cors: {
-        origin: "http://localhost:3000",
+        origin: "https://kek.bounceme.net",
+        // origin: "http://localhost:3000",
+        // origin: "*",
         methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
         allowedHeaders: "*",
         credentials: true
@@ -26,6 +39,7 @@ const WATCHROOM = "watchroom";
 
 io.on("connection", socket => {
 
+    console.log(`New connection: ${socket.id}`);
     socket.join(WATCHROOM);
 
     socket.on("playerEvent", (type, payload, callback) => {

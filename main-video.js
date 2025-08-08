@@ -55,7 +55,11 @@ if (storedSrc) {
 // player.handleKeyDown()
 
 selectButton.onclick = () => {
+    /** @type {string} */
     let source = sourceInput.value;
+    if (!source.includes("http") && !source.includes("hls/")) {
+        source = "hls/" + source;
+    }
     source += source.endsWith('/') ? '' : '/';
     
     applyPlayerSrc(source);
@@ -120,17 +124,17 @@ player.ready(function () {
 const applySync = () => {
     console.log("Sync is supposed to happen now !!");
     
-    const wasPlaying = !player.paused();
+    // const wasPlaying = !player.paused();
       
-    if (wasPlaying) {
-        player.pause();
-    }
+    // if (wasPlaying) {
+    //     player.pause();
+    // }
 
     player.trigger('seeked');
 
-    if (wasPlaying) {
-        player.play();
-    }
+    // if (wasPlaying) {
+    //     player.play();
+    // }
 }
 
 const applySubtitleOffset = (offset = 0) => {
