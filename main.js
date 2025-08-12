@@ -2,6 +2,14 @@ import './style.css';
 import player from "./main-video.js";
 import { io } from 'socket.io-client';
 
+let queryString = window.location.search;
+let urlParams = new URLSearchParams(queryString);
+let roomId = urlParams.get('room');
+
+if(!roomId){
+  window.location = 'lobby.html';
+}
+
 const PROD = import.meta.env.PROD;
 console.log(`Running prod: ${PROD}`);
 const wsURI = PROD 
@@ -9,6 +17,9 @@ const wsURI = PROD
   : 'ws://localhost:3000';
 
 const socket = io(wsURI, {
+    query: {
+      roomId: roomId
+    },
     path: '/ws',
     timeout: 3000,
     transports: ['websocket', 'polling', 'flashsocket'],
@@ -28,6 +39,10 @@ socket.on("getAvailableMedia", (availableMedia) => {
 })
 
 socket.on("getPlayerEvent", handleEvent);
+socket.on("room_users", users => {
+  console.log("Users in the room:", users);
+});
+socket.on("newUserJoined", console.log);
 
 console.log(player);
 
