@@ -7,7 +7,7 @@ let urlParams = new URLSearchParams(queryString);
 let roomId = urlParams.get('room');
 
 if(!roomId){
-  window.location = 'lobby.html';
+  window.location = 'index.html';
 }
 
 const PROD = import.meta.env.PROD;
@@ -35,7 +35,7 @@ if (socket.connected) {
 }
 
 socket.on("getAvailableMedia", (availableMedia) => {
-  console.log(`Sources available: ${availableMedia}`);
+  console.log("Sources available: ", availableMedia);
 })
 
 socket.on("getPlayerEvent", handleEvent);

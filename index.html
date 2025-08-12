@@ -1,35 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WebRTC Demo</title>
-    <!-- <link rel="stylesheet" href="style.css"> -->
-  </head>
-  <body>
-    <video-js
-      id="my-video"
-      class="video-js"
-      controls
-      preload="auto"
-      width="640"
-      height="264"
-      poster="MY_VIDEO_POSTER.jpg"
-      data-setup="{}"
-    >
-      <p class="vjs-no-js">
-        To view this video please enable JavaScript, and consider upgrading to a web browser that
-        <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
-      </p>
-    </video-js>
-    <h2>0. Select source</h2>
-    <input id="playerSrc" type="text" value="http://localhost:8000/spongebob">
-    <input id="playerSrcType" type="text" value="application/x-mpegURL">
-    <button id="playerSrcSelect">Select</button>
-    
-    <script type="module" src="/main-video.js"></script>
-    <script type="module" src="/main.js"></script>
-    
-  </body>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>Join room</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='lobby.css'>
+</head>
+<body>
+    <main id="lobby-container">
+        <div id="form-container">
+            <div id="form__container__header">
+                <p>👋 Create OR Join a Room</p>
+            </div>
+
+            <div id="form__content__wrapper">
+                <form id="join-form">
+                    <input type="text" name="invite_link" required/>
+                    <input type="submit" value="Join Room" />
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+
+<script>
+    let form = document.getElementById('join-form')
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault()
+        let inviteCode = e.target.invite_link.value
+        window.location = `player.html?room=${inviteCode}` 
+    })
+</script>
+
 </html>
