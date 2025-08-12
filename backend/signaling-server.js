@@ -2,8 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const https = require('https');
-const socketIo = require('socket.io')
+const socketIo = require('socket.io');
 
+const MEDIA_PATH = "/Users/pon/Documents/code/webstream/hls";
 const app = express();
 
 app.use(cors());
@@ -40,6 +41,7 @@ const WATCHROOM = "watchroom";
 io.on("connection", socket => {
 
     console.log(`New connection: ${socket.id}`);
+    socket.emit("getAvailableMedia", getAvailableMedia());
     socket.join(WATCHROOM);
 
     socket.on("playerEvent", (type, payload, callback) => {
@@ -50,3 +52,14 @@ io.on("connection", socket => {
     });
 
 });
+
+function getAvailableMedia() {
+    let availableMedia = [];
+
+    fs.readdir(MEDIA_PATH, {}, (err, files) => {
+        if (err) console.log(err);
+        availableMedia = files.filter(val => !val.startsWith('.'));
+    });
+
+    return availableMedia;
+}

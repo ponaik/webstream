@@ -23,6 +23,10 @@ if (socket.connected) {
   console.log("Connected to websocket !!");
 }
 
+socket.on("getAvailableMedia", (availableMedia) => {
+  console.log(`Sources available: ${availableMedia}`);
+})
+
 socket.on("getPlayerEvent", handleEvent);
 
 console.log(player);
