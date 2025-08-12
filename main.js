@@ -17,6 +17,9 @@ const wsURI = PROD
   : 'ws://localhost:3000';
 
 const socket = io(wsURI, {
+    query: {
+      roomId: roomId
+    },
     path: '/ws',
     timeout: 3000,
     transports: ['websocket', 'polling', 'flashsocket'],
@@ -32,6 +35,10 @@ if (socket.connected) {
 }
 
 socket.on("getPlayerEvent", handleEvent);
+socket.on("room_users", users => {
+  console.log("Users in the room:", users);
+});
+socket.on("newUserJoined", console.log);
 
 console.log(player);
 

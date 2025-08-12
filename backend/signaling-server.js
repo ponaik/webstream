@@ -1,8 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
-const https = require('https');
-const socketIo = require('socket.io')
+// const fs = require('fs');
+const socketIo = require('socket.io');
 
 const app = express();
 
@@ -14,14 +13,6 @@ app.get('/', (req, res) => {
 const server = app.listen(3000, () => {
     console.log('server is running on http://localhost:3000')
 })
-// const server = https.createServer({
-//     cert: fs.readFileSync('D:/web/cert/site.crt.pem'),
-//     key:  fs.readFileSync('D:/web/cert/site.key.pem')
-// });
-
-// server.listen(443, () => {
-//   console.log('Listening for HTTPS + WSS on port 443');
-// });
 
 const io = socketIo(server, {
     path: '/ws',
@@ -35,17 +26,62 @@ const io = socketIo(server, {
     },
 });
 
-const WATCHROOM = "watchroom";
+io.use((socket, next) => {
+    const { roomId } = socket.handshake.query || {};
+    if (!roomId) {
+        socket.emit("error", "Shitty roomId");
+        return next(new Error("Invalid roomId"));  
+    }
+    next();
+});
 
-io.on("connection", socket => {
+// const WATCHROOM = "watchroom";
+const rooms = {};
+const socketToRoom = {};
 
-    console.log(`New connection: ${socket.id}`);
-    socket.join(WATCHROOM);
+io.on("connection", (/** @type {socketIo.RemoteSocket} */ socket) => {
+    const { roomId } = socket.handshake.query;
+    // const headers = socket.handshake.headers;
+    // const ip = socket.handshake.address;
+
+    console.log("Query Params:", socket.handshake.query);
+    // console.log(`New connection: ${socket.id}`);
+
+
+    socket.join(roomId);
+    socketToRoom[socket.id] = roomId;
+
+    // persist the new user in the room
+    if (rooms[roomId]) {
+        rooms[roomId].push({id: socket.id, name: socket.id});
+    } else {
+        rooms[roomId] = [{id: socket.id, name: socket.id}];
+    }
+
+    // sends a list of joined users to a new user
+    const users = rooms[roomId].filter(user => user.id !== socket.id);
+    socket.emit("room_users", users);
+    socket.broadcast.to(roomId).emit("newUsedJoined", socket.id);
+    console.log("[joined] room:" + roomId + " name: " + socket.id);
+    
+
+    socket.on("disconnect", () => {
+        let room = rooms[roomId];
+        if (room) {
+            room = room.filter(user => user.id !== socket.id);
+            rooms[roomId] = room;
+        }
+        socket.broadcast.to(room).emit("user_exit", {id: socket.id});
+        console.log(`[${roomId}]: ${socket.id} exit`);
+    });
+
+
+    // socket.join(WATCHROOM);
 
     socket.on("playerEvent", (type, payload, callback) => {
         callback(`dicks are at ${Math.round(Math.random()*100)}%`);
 
-        socket.broadcast.to(WATCHROOM).emit("getPlayerEvent", type, payload);
+        socket.broadcast.to(roomId).emit("getPlayerEvent", type, payload);
         console.log("payerEvent: ", type, socket.id);
     });
 
