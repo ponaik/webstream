@@ -2,6 +2,14 @@ import './style.css';
 import player from "./main-video.js";
 import { io } from 'socket.io-client';
 
+let queryString = window.location.search;
+let urlParams = new URLSearchParams(queryString);
+let roomId = urlParams.get('room');
+
+if(!roomId){
+  window.location = 'lobby.html';
+}
+
 const PROD = import.meta.env.PROD;
 console.log(`Running prod: ${PROD}`);
 const wsURI = PROD 
