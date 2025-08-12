@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-// const fs = require('fs');
+const fs = require('fs');
 const socketIo = require('socket.io');
 
 const MEDIA_PATH = "/Users/pon/Documents/code/webstream/hls";
@@ -28,9 +28,9 @@ const io = socketIo(server, {
 });
 
 io.use((socket, next) => {
-    const { roomId } = socket.handshake.query || {};
+    const { roomId } = socket.handshake.auth || {};
     if (!roomId) {
-        socket.emit("error", "Shitty roomId");
+        console.log("Empty roomId. Disconnecting.");
         return next(new Error("Invalid roomId"));  
     }
     next();
@@ -41,13 +41,13 @@ const rooms = {};
 const socketToRoom = {};
 
 io.on("connection", (/** @type {socketIo.RemoteSocket} */ socket) => {
-    const { roomId } = socket.handshake.query;
+    socket.emit("getAvailableMedia", getAvailableMedia());
+
+    const { roomId } = socket.handshake.auth;
     // const headers = socket.handshake.headers;
     // const ip = socket.handshake.address;
-
-    console.log("Query Params:", socket.handshake.query);
+    console.log("Auth Params:", socket.handshake.auth);
     // console.log(`New connection: ${socket.id}`);
-
 
     socket.join(roomId);
     socketToRoom[socket.id] = roomId;
@@ -62,7 +62,7 @@ io.on("connection", (/** @type {socketIo.RemoteSocket} */ socket) => {
     // sends a list of joined users to a new user
     const users = rooms[roomId].filter(user => user.id !== socket.id);
     socket.emit("room_users", users);
-    socket.broadcast.to(roomId).emit("newUsedJoined", socket.id);
+    socket.broadcast.to(roomId).emit("newUserJoined", socket.id);
     console.log("[joined] room:" + roomId + " name: " + socket.id);
     
 

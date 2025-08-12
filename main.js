@@ -17,9 +17,7 @@ const wsURI = PROD
   : 'ws://localhost:3000';
 
 const socket = io(wsURI, {
-    query: {
-      roomId: roomId
-    },
+    auth: { roomId },
     path: '/ws',
     timeout: 3000,
     transports: ['websocket', 'polling', 'flashsocket'],
@@ -33,6 +31,8 @@ const socket = io(wsURI, {
 if (socket.connected) {
   console.log("Connected to websocket !!");
 }
+
+socket.on("connect_error", console.log);
 
 socket.on("getAvailableMedia", (availableMedia) => {
   console.log("Sources available: ", availableMedia);
