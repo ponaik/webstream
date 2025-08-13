@@ -1,10 +1,13 @@
-// import { defineConfig } from 'vite';
-// import mkcert from 'vite-plugin-mkcert';
+import { defineConfig } from 'vite';
+import path from 'path';
 
-// export default defineConfig({
-//   plugins: [mkcert()],
-//   server: {
-//     https: true,
-//     host: true
-//   }
-// });
+export default defineConfig({
+  build: {
+    rollupOptions: {
+      input: {
+        lobby: path.resolve(__dirname, 'index.html'),
+        main: path.resolve(__dirname, 'player.html'),
+      }
+    }
+  }
+});
