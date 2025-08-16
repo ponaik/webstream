@@ -1,22 +1,19 @@
-import './style.css';
-import player from "./main-video.js";
+import '../styles/style.css';
+import player from "./video-player.js";
 import { io } from 'socket.io-client';
 
 let queryString = window.location.search;
 let urlParams = new URLSearchParams(queryString);
 let roomId = urlParams.get('room');
 
-if(!roomId){
+if (!roomId) { 
   window.location = 'index.html';
 }
 
-const PROD = import.meta.env.PROD;
-console.log(`Running prod: ${PROD}`);
-const wsURI = PROD 
-  ? 'wss://kek.bounceme.net'
-  : 'ws://localhost:3000';
+console.log(`Running prod: ${import.meta.env.PROD}`);
+const wsURL = import.meta.env.VITE_WEBSOCKET_BASE_URL;
 
-const socket = io(wsURI, {
+const socket = io(wsURL, {
     auth: { roomId },
     path: '/ws',
     timeout: 3000,
@@ -32,11 +29,9 @@ if (socket.connected) {
   console.log("Connected to websocket !!");
 }
 
-socket.on("connect_error", console.log);
+// socket.on("connect_error", console.log);
 
-socket.on("getAvailableMedia", (availableMedia) => {
-  console.log("Sources available: ", availableMedia);
-})
+console.log(getAvailableMadia());
 
 socket.on("getPlayerEvent", handleEvent);
 socket.on("room_users", users => {
@@ -115,3 +110,28 @@ function handleDataChannelOpen() {
 player.on('play', () => emitEvent('play'));
 player.on('pause', () => emitEvent('pause'));
 player.on('seeked', () => emitEvent('seeked', {'time': player.currentTime()}));
+
+
+function getAvailableMadia() {
+    const URL = import.meta.env.VITE_MEDIA_BASE_URL;
+    if (!URL) {
+        console.log("No media url");
+        return [];
+    }
+
+    fetch(URL)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        console.log(response);
+        return response.json(); 
+    })
+    .then(data => {
+        console.log('Parsed JSON:', data); 
+        return data;
+    })
+    .catch(error => {
+        console.error('Error fetching data:', error);
+    });
+}

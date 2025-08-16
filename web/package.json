@@ -1,0 +1,20 @@
+{
+  "name": "webstream-web",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0",
+    "vite-plugin-mkcert": "^1.17.8"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.8.1",
+    "video.js": "^8.23.3",
+    "videojs-hotkeys": "^0.2.30"
+  },
+  "description": "the frontend of the thingy",
+  "license": "MIT"
+}

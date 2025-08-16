@@ -1,9 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
 const socketIo = require('socket.io');
 
-const MEDIA_PATH = "/Users/pon/Documents/code/webstream/hls";
 const app = express();
 
 app.use(cors());
@@ -41,7 +39,7 @@ const rooms = {};
 const socketToRoom = {};
 
 io.on("connection", (/** @type {socketIo.Socket} */ socket) => {
-    socket.emit("getAvailableMedia", getAvailableMedia());
+
     const { roomId } = socket.handshake.auth;
     // const headers = socket.handshake.headers;
     // const ip = socket.handshake.address;
@@ -87,13 +85,3 @@ io.on("connection", (/** @type {socketIo.Socket} */ socket) => {
 
 });
 
-function getAvailableMedia() {
-    let availableMedia = [];
-
-    fs.readdir(MEDIA_PATH, {}, (err, files) => {
-        if (err) console.log(err);
-        availableMedia = files.filter(val => !val.startsWith('.'));
-    });
-
-    return availableMedia;
-}

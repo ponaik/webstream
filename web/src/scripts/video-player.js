@@ -22,16 +22,16 @@ const sourceInput = document.getElementById('playerSrc');
 const typeInput = document.getElementById('playerSrcType');
 const selectButton = document.getElementById('playerSrcSelect');
 
-const applyPlayerSrc = (source) => {
+const applyPlayerSrc = (source, type) => {
     try {
         console.log("Trying src: ", source);
 
         player.src({
             src: source + 'master.m3u8', 
-            type: typeInput.value
+            type: type
             //   withCredentials: true
         });
-    
+        
         player.addRemoteTextTrack({
             kind: 'subtitles',
             label: 'English',
@@ -41,15 +41,17 @@ const applyPlayerSrc = (source) => {
         }, false);
 
         localStorage.setItem("playerSrc", source);
+        localStorage.setItem("playerType", type);
     } catch (error) {
         console.log("Wrong player src or something: ", error);
     }
 } 
 
 const storedSrc = localStorage.getItem('playerSrc');
+const storedType = localStorage.getItem('playerType');
 
-if (storedSrc) {
-    applyPlayerSrc(storedSrc);
+if (storedSrc && storedType) {
+    applyPlayerSrc(storedSrc, storedType);
 }
 
 // player.handleKeyDown()
@@ -57,12 +59,12 @@ if (storedSrc) {
 selectButton.onclick = () => {
     /** @type {string} */
     let source = sourceInput.value;
-    if (!source.includes("http") && !source.includes("hls/")) {
-        source = "hls/" + source;
-    }
+    // if (!source.includes("http") && !source.includes("hls/")) {
+    //     source = "hls/" + source;
+    // }
     source += source.endsWith('/') ? '' : '/';
     
-    applyPlayerSrc(source);
+    applyPlayerSrc(source, typeInput.value);
 };
 
 
