@@ -9,5 +9,10 @@ export default defineConfig({
         main: path.resolve(__dirname, 'player.html'),
       }
     }
-  }
+  }, 
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    }
+  },
 });

@@ -1,5 +1,5 @@
-import './style.css';
-import player from "./main-video.js";
+import '../styles/style.css';
+import player from "./video-player.js";
 import { io } from 'socket.io-client';
 
 let queryString = window.location.search;
@@ -29,7 +29,7 @@ if (socket.connected) {
   console.log("Connected to websocket !!");
 }
 
-socket.on("connect_error", console.log);
+// socket.on("connect_error", console.log);
 
 console.log(getAvailableMadia());
 
