@@ -40,9 +40,8 @@ io.use((socket, next) => {
 const rooms = {};
 const socketToRoom = {};
 
-io.on("connection", (/** @type {socketIo.RemoteSocket} */ socket) => {
+io.on("connection", (/** @type {socketIo.Socket} */ socket) => {
     socket.emit("getAvailableMedia", getAvailableMedia());
-
     const { roomId } = socket.handshake.auth;
     // const headers = socket.handshake.headers;
     // const ip = socket.handshake.address;
