@@ -13,7 +13,8 @@
   "dependencies": {
     "socket.io-client": "^4.8.1",
     "video.js": "^8.23.3",
-    "videojs-hotkeys": "^0.2.30"
+    "videojs-hotkeys": "^0.2.30",
+    "videojs-youtube": "^3.0.1"
   },
   "description": "the frontend of the thingy",
   "license": "MIT"

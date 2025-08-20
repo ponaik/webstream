@@ -1,6 +1,7 @@
 import 'video.js/dist/video-js.css';
 import videojs from 'video.js';
 import 'videojs-hotkeys';
+import 'videojs-youtube';
 
 
 // console.log(hlsQualitySelector)
@@ -9,14 +10,14 @@ import 'videojs-hotkeys';
 const OFFSET_STEP = 0.5;
 let subtitleOffset = 0;
 
-var player = videojs('my-video', {
-    html5: {
-        vhs: {
-            enableLowInitialPlaylist: false,
-            overrideNative: true
-        }
-    }
-});
+let player;
+
+
+document.getElementById('loadYoutube').onclick = () => {
+    initPlayer();
+}
+
+initPlayer();
 
 const sourceInput = document.getElementById('playerSrc');
 const typeInput = document.getElementById('playerSrcType');
@@ -27,18 +28,19 @@ const applyPlayerSrc = (source, type) => {
         console.log("Trying src: ", source);
 
         player.src({
-            src: source + 'master.m3u8', 
+            // src: source + 'master.m3u8', 
+            src: source, 
             type: type
             //   withCredentials: true
         });
         
-        player.addRemoteTextTrack({
-            kind: 'subtitles',
-            label: 'English',
-            srclang: 'en',
-            src: source + 'subs_en.vtt',
-            default: true
-        }, false);
+        // player.addRemoteTextTrack({
+        //     kind: 'subtitles',
+        //     label: 'English',
+        //     srclang: 'en',
+        //     src: source + 'subs_en.vtt',
+        //     default: true
+        // }, false);
 
         localStorage.setItem("playerSrc", source);
         localStorage.setItem("playerType", type);
@@ -62,7 +64,7 @@ selectButton.onclick = () => {
     // if (!source.includes("http") && !source.includes("hls/")) {
     //     source = "hls/" + source;
     // }
-    source += source.endsWith('/') ? '' : '/';
+    // source += source.endsWith('/') ? '' : '/';
     
     applyPlayerSrc(source, typeInput.value);
 };
@@ -71,7 +73,38 @@ selectButton.onclick = () => {
 
 
 
-player.ready(function () {
+function initPlayer() {
+    if (player) {
+        player.dispose();
+
+        let container = document.getElementById('video-container');
+        container.innerHTML = '';
+
+        let videoTag = document.createElement('video-js');
+        videoTag.id = 'my-video';
+        videoTag.className = 'video-js vjs-default-skin';
+        videoTag.setAttribute('controls', '');
+        videoTag.setAttribute('width', '640');
+        videoTag.setAttribute('height', '264');
+        
+        container.appendChild(videoTag);
+    }
+
+    player = videojs('my-video', {
+        techOrder: ['youtube', 'html5'],
+        sources: [{type: "video/youtube", src: "https://www.youtube.com/watch?v=zNFkzq1AUoY&pp=0gcJCa0JAYcqIYzv"}],
+        html5: {
+            vhs: {
+                enableLowInitialPlaylist: false,
+                overrideNative: true
+            }
+        }
+    });
+            
+    player.ready(handlePlayerReady);
+}
+
+function handlePlayerReady() {
 
     player.hotkeys({
 		volumeStep: 0.1,
@@ -121,7 +154,7 @@ player.ready(function () {
     myButtonDom.innerHTML = '<span class="vjs-icon-spinner"></span>';
     myButton.controlText("My Cancel Button");
     myButtonDom.onclick = applySync;
-});
+}
 
 const applySync = () => {
     console.log("Sync is supposed to happen now !!");

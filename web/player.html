@@ -8,25 +8,29 @@
     <!-- <link rel="stylesheet" href="style.css"> -->
   </head>
   <body>
-    <video-js
-      id="my-video"
-      class="video-js"
-      controls
-      preload="auto"
-      width="640"
-      height="264"
-      poster="MY_VIDEO_POSTER.jpg"
-      data-setup="{}"
-    >
-      <p class="vjs-no-js">
-        To view this video please enable JavaScript, and consider upgrading to a web browser that
-        <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
-      </p>
-    </video-js>
+    <div id="video-container">
+      <video-js
+        id="my-video"
+        class="video-js"
+        controls
+        preload="auto"
+        width="640"
+        height="264"
+        poster="MY_VIDEO_POSTER.jpg"
+        data-setup="{}"
+        >
+        <p class="vjs-no-js">
+          To view this video please enable JavaScript, and consider upgrading to a web browser that
+          <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+        </p>
+      </video-js>
+    </div>
     <h2>0. Select source</h2>
     <input id="playerSrc" type="text" value="http://localhost:8000/spongebob">
     <input id="playerSrcType" type="text" value="application/x-mpegURL">
     <button id="playerSrcSelect">Select</button>
+    <br>
+    <button id="loadYoutube">Load Youtube</button>
     
     <script type="module" src="src/scripts/video-player.js"></script>
     <script type="module" src="src/scripts/main.js"></script>
