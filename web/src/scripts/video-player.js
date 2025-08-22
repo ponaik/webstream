@@ -10,14 +10,12 @@ import 'videojs-youtube';
 const OFFSET_STEP = 0.5;
 let subtitleOffset = 0;
 
-let player;
+let player = initPlayer();
 
 
 document.getElementById('loadYoutube').onclick = () => {
-    initPlayer();
+    reloadPlayer();
 }
-
-initPlayer();
 
 const sourceInput = document.getElementById('playerSrc');
 const typeInput = document.getElementById('playerSrcType');
@@ -74,23 +72,14 @@ selectButton.onclick = () => {
 
 
 function initPlayer() {
-    if (player) {
-        player.dispose();
-
-        let container = document.getElementById('video-container');
-        container.innerHTML = '';
-
-        let videoTag = document.createElement('video-js');
-        videoTag.id = 'my-video';
-        videoTag.className = 'video-js vjs-default-skin';
-        videoTag.setAttribute('controls', '');
-        videoTag.setAttribute('width', '640');
-        videoTag.setAttribute('height', '264');
-        
-        container.appendChild(videoTag);
-    }
-
-    player = videojs('my-video', {
+    let newPlayer = videojs('my-video', {
+        responsive: true,
+        controls: true,
+        muted: true,
+        height: 720,
+        width: 1280,
+        // enableSmoothSeeking: true,
+        // aspectRatio: "16:9",
         techOrder: ['youtube', 'html5'],
         sources: [{type: "video/youtube", src: "https://www.youtube.com/watch?v=zNFkzq1AUoY&pp=0gcJCa0JAYcqIYzv"}],
         html5: {
@@ -100,53 +89,77 @@ function initPlayer() {
             }
         }
     });
-            
-    player.ready(handlePlayerReady);
+       
+    newPlayer.ready(handlePlayerReady);
+
+    return newPlayer;
 }
+
+function reloadPlayer() {
+    if (!player) {
+        return;
+    }
+    player.dispose();   
+
+    let container = document.getElementById('video-container');
+    container.innerHTML = '';
+
+    let videoTag = document.createElement('video-js');
+    videoTag.id = 'my-video';
+    videoTag.className = 'video-js vjs-default-skin';
+    
+    container.appendChild(videoTag);
+
+    player = initPlayer();
+}
+
+const hotkeysConfig = {
+    playPauseKey: () => false,
+    alwaysCaptureHotkeys: true,
+    volumeStep: 0.1,
+    seekStep: 5,
+    enableModifiersForNumbers: false,
+    customKeys: {
+        // Create custom hotkeys
+        captionKey: {
+            key: function (event) {
+                // C for captures 
+                return event.code === "KeyC";
+            },
+            handler: function (player, options, event) {
+                const tracks = player.textTracks();
+                console.log(tracks);
+
+                for (let i = 0; i < tracks.length; i++) {
+                    const track = tracks[i];
+                    if (track.kind === 'subtitles' || track.kind === 'captions') {
+                        track.mode = (track.mode === 'showing') ? 'disabled' : 'showing';
+                    }
+                }
+            },
+        },
+        subDelayUp: {
+            key: (e) => e.code === "KeyJ",
+            handler: () => {
+                applySubtitleOffset(OFFSET_STEP);
+            }
+        },
+        subDelayDown: {
+            key: (e) => e.code === "KeyK",
+            handler: () => {
+                applySubtitleOffset(-OFFSET_STEP);
+            }
+        },
+        syncKey: {
+            key: (e) => e.code === "KeyS",
+            handler: applySync
+        },
+    },
+};
 
 function handlePlayerReady() {
 
-    player.hotkeys({
-		volumeStep: 0.1,
-		seekStep: 5,
-		enableModifiersForNumbers: false,
-        customKeys: {
-            // Create custom hotkeys
-            captionKey: {
-                key: function (event) {
-                    // C for captures 
-                    return event.code === "KeyC";
-                },
-                handler: function (player, options, event) {
-                    const tracks = player.textTracks();
-                    console.log(tracks);
-
-                    for (let i = 0; i < tracks.length; i++) {
-                        const track = tracks[i];
-                        if (track.kind === 'subtitles' || track.kind === 'captions') {
-                            track.mode = (track.mode === 'showing') ? 'disabled' : 'showing';
-                        }
-                    }
-                },
-            },
-            subDelayUp: {
-                key: (e) => e.code === "KeyJ",
-                handler: () => {
-                    applySubtitleOffset(OFFSET_STEP);
-                }
-            },
-            subDelayDown: {
-                key: (e) => e.code === "KeyK",
-                handler: () => {
-                    applySubtitleOffset(-OFFSET_STEP);
-                }
-            },
-            syncKey: {
-                key: (e) => e.code === "KeyS",
-                handler: applySync
-            },
-        },
-	});
+    // player.hotkeys(hotkeysConfig);
 
     
     var myButton = player.controlBar.addChild('button', {}, 0);
@@ -156,15 +169,13 @@ function handlePlayerReady() {
     myButtonDom.onclick = applySync;
 }
 
-const applySync = () => {
+function applySync() {
     console.log("Sync is supposed to happen now !!");
-    
+
     // const wasPlaying = !player.paused();
-      
     // if (wasPlaying) {
     //     player.pause();
     // }
-
     player.trigger('seeked');
 
     // if (wasPlaying) {
@@ -190,3 +201,4 @@ const applySubtitleOffset = (offset = 0) => {
 }
 
 export default player;
+export {hotkeysConfig};
