@@ -18,6 +18,9 @@ if (!import.meta.env.PROD) {
 }
 const wsURL = import.meta.env.VITE_WEBSOCKET_BASE_URL;
 
+const sourceInput = document.getElementById('playerSrc');
+sourceInput.setAttribute("value", import.meta.env.VITE_MEDIA_BASE_URL);
+
 const socket = io(wsURL, {
   auth: { roomId },
   path: "/ws",

@@ -26,19 +26,19 @@ const applyPlayerSrc = (source, type) => {
         console.log("Trying src: ", source);
 
         player.src({
-            // src: source + 'master.m3u8', 
-            src: source, 
+            src: source + '/master.m3u8', 
+            // src: source, 
             type: type
             //   withCredentials: true
         });
         
-        // player.addRemoteTextTrack({
-        //     kind: 'subtitles',
-        //     label: 'English',
-        //     srclang: 'en',
-        //     src: source + 'subs_en.vtt',
-        //     default: true
-        // }, false);
+        player.addRemoteTextTrack({
+            kind: 'subtitles',
+            label: 'English',
+            srclang: 'en',
+            src: source + '/subs_en.vtt',
+            default: true
+        }, false);
 
         localStorage.setItem("playerSrc", source);
         localStorage.setItem("playerType", type);

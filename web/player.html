@@ -20,13 +20,25 @@
         </p>
       </video-js>
     </div>
-    <h2>0. Select source</h2>
-    <input id="playerSrc" type="text" value="http://localhost:8000/spongebob">
-    <input id="playerSrcType" type="text" value="application/x-mpegURL">
-    <button id="playerSrcSelect">Select</button>
-    <br>
-    <button id="loadYoutube">Load Youtube</button>
-    
+    <div class="card">
+      <h2>Select source</h2>
+      
+      <div class="form-group">
+        <label for="playerSrc">Source URL</label>
+        <input id="playerSrc" type="text" value="http://localhost:8000/spongebob">
+      </div>
+
+      <div class="form-group">
+        <label for="playerSrcType">Source type</label>
+        <input id="playerSrcType" type="text" value="application/x-mpegURL">
+      </div>
+
+      <div class="button-group">
+        <button id="playerSrcSelect">Select</button>
+        <button id="loadYoutube">Load Youtube</button>
+      </div>
+    </div>
+
     <script type="module" src="src/scripts/video-player.js"></script>
     <script type="module" src="src/scripts/main.js"></script>
     
