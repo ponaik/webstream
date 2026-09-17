@@ -1,4 +1,5 @@
 import "../styles/style.css";
+import { getAvailableMadia } from "./getAvailableMadia.js";
 import player, { hotkeysConfig } from "./video-player.js";
 import { io } from "socket.io-client";
 
@@ -17,9 +18,10 @@ if (!import.meta.env.PROD) {
   window.eventRegister = seekedTrigger;
 }
 const wsURL = import.meta.env.VITE_WEBSOCKET_BASE_URL;
+const URL = import.meta.env.VITE_MEDIA_BASE_URL;
 
 const sourceInput = document.getElementById('playerSrc');
-sourceInput.setAttribute("value", import.meta.env.VITE_MEDIA_BASE_URL);
+sourceInput.setAttribute("value", URL);
 
 const socket = io(wsURL, {
   auth: { roomId },
@@ -37,7 +39,7 @@ const socket = io(wsURL, {
 
 // socket.on("connect_error", console.log);
 
-console.log(getAvailableMadia());
+console.log(getAvailableMadia(URL));
 
 socket.on("getPlayerEvent", handleEvent);
 socket.on("room_users", (users) => {
@@ -154,28 +156,4 @@ function playbackToggleAndEmit() {
     emitEvent("pause");
     player.pause();
   }
-}
-
-function getAvailableMadia() {
-  const URL = import.meta.env.VITE_MEDIA_BASE_URL;
-  if (!URL) {
-    console.log("No media url");
-    return [];
-  }
-
-  fetch(URL)
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      console.log(response);
-      return response.json();
-    })
-    .then((data) => {
-      console.log("Parsed JSON:", data);
-      return data;
-    })
-    .catch((error) => {
-      console.error("Error fetching data:", error);
-    });
 }

@@ -30,13 +30,40 @@ body {
   align-items: center;
 }
 
-.card {
-  background-color: #383c44;
+.cards {
   width: 100%;
   max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.card {
+  background-color: #383c44;
   padding: 28px;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.form-group select {
+  width: 100%;
+  background-color: #2b2f36;
+  border: 1px solid #4a505b;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg fill="%23a0a5b0" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 32px;
+}
+
+.form-group select:focus {
+  border-color: #6b7280;
 }
 
 h2 {

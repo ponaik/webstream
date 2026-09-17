@@ -202,3 +202,4 @@ const applySubtitleOffset = (offset = 0) => {
 
 export default player;
 export {hotkeysConfig};
+export {applyPlayerSrc};

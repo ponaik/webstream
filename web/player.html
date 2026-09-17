@@ -20,26 +20,43 @@
         </p>
       </video-js>
     </div>
-    <div class="card">
-      <h2>Select source</h2>
-      
-      <div class="form-group">
-        <label for="playerSrc">Source URL</label>
-        <input id="playerSrc" type="text" value="http://localhost:8000/spongebob">
-      </div>
+    <div class="cards">
+      <div class="card">
+        <h2>Select source directory</h2>
 
-      <div class="form-group">
-        <label for="playerSrcType">Source type</label>
-        <input id="playerSrcType" type="text" value="application/x-mpegURL">
-      </div>
+        <div class="form-group">
+          <label for="directorySelect">Directory Item</label>
+          <select id="directorySelect">
+            <option value="" disabled selected>Select an item...</option>
+          </select>
+        </div>
 
-      <div class="button-group">
-        <button id="playerSrcSelect">Select</button>
-        <button id="loadYoutube">Load Youtube</button>
+        <div class="button-group">
+          <button id="selectBtn">Select</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Manual source selection</h2>
+        
+        <div class="form-group">
+          <label for="playerSrc">Source URL</label>
+          <input id="playerSrc" type="text" value="http://localhost:8000/spongebob">
+        </div>
+
+        <div class="form-group">
+          <label for="playerSrcType">Source type</label>
+          <input id="playerSrcType" type="text" value="application/x-mpegURL">
+        </div>
+
+        <div class="button-group">
+          <button id="playerSrcSelect">Select</button>
+          <button id="loadYoutube">Load Youtube</button>
+        </div>
       </div>
     </div>
 
     <script type="module" src="src/scripts/video-player.js"></script>
+    <script type="module" src="src/scripts/selector.js"></script>
     <script type="module" src="src/scripts/main.js"></script>
     
   </body>
