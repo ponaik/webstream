@@ -1,14 +1,15 @@
 import { getAvailableMadia } from "./getAvailableMadia";
 import { applyPlayerSrc } from "./video-player";
 
-// const URL = import.meta.env.VITE_MEDIA_BASE_URL;
-const URL = "https://kek.bounceme.net/media/hls/";
+const URL = import.meta.env.VITE_MEDIA_BASE_URL;
 
 const selectElement = document.getElementById("directorySelect");
 const selectBtn = document.getElementById("selectBtn");
 const typeInput = document.getElementById('playerSrcType');
 
 const itemsData = await getAvailableMadia(URL);
+
+console.log(itemsData);
 
 // Populate the select element from array
 itemsData.forEach((item, index) => {

@@ -9,9 +9,11 @@ import 'videojs-youtube';
 
 const OFFSET_STEP = 0.5;
 let subtitleOffset = 0;
+const ModalDialog = videojs.getComponent('ModalDialog');
+/** @type {ModalDialog} */
+let modal;
 
-let player = initPlayer();
-
+export let player = initPlayer();
 
 document.getElementById('loadYoutube').onclick = () => {
     reloadPlayer();
@@ -25,20 +27,29 @@ const applyPlayerSrc = (source, type) => {
     try {
         console.log("Trying src: ", source);
 
-        player.src({
-            src: source + '/master.m3u8', 
-            // src: source, 
-            type: type
-            //   withCredentials: true
-        });
-        
-        player.addRemoteTextTrack({
-            kind: 'subtitles',
-            label: 'English',
-            srclang: 'en',
-            src: source + '/subs_en.vtt',
-            default: true
-        }, false);
+        if (type === 'application/x-mpegURL') {
+            console.log("Source is hls....");
+
+            player.src({
+                src: source + '/master.m3u8', 
+                type: type
+                //   withCredentials: true
+            });
+            
+            player.addRemoteTextTrack({
+                kind: 'subtitles',
+                label: 'English',
+                srclang: 'en',
+                src: source + '/subs_en.vtt',
+                default: true
+            }, false);
+        } else {
+            player.src({
+                src: source,
+                type: type
+            });
+        }
+
 
         localStorage.setItem("playerSrc", source);
         localStorage.setItem("playerType", type);
@@ -93,6 +104,29 @@ function initPlayer() {
     newPlayer.ready(handlePlayerReady);
 
     return newPlayer;
+}
+
+function handlePlayerReady() {
+    // player.hotkeys(hotkeysConfig);
+
+    var myButton = player.controlBar.addChild('button', {}, 0);
+    var myButtonDom = myButton.el();
+    myButtonDom.innerHTML = '<span class="vjs-icon-spinner"></span>';
+    myButton.controlText("My Cancel Button");
+    myButtonDom.onclick = applySync;
+
+    modal = new ModalDialog(player, {
+        content: 'kek!',
+        temporary: false,
+        unclosable: false,
+        pauseOnOpen: false 
+    });
+    modal.on('keydown', (e) => {
+        if (e.code === "KeyT") {
+            modal.close();
+        }
+    });
+    player.addChild(modal);
 }
 
 function reloadPlayer() {
@@ -154,19 +188,21 @@ const hotkeysConfig = {
             key: (e) => e.code === "KeyS",
             handler: applySync
         },
+        testKey: {
+            key: (e) => e.code === "KeyT",
+            handler: () => {
+                modal.open();
+            }
+        }
     },
 };
 
-function handlePlayerReady() {
+function setAlertContent(message) {
+    modal.content(message)
+}
 
-    // player.hotkeys(hotkeysConfig);
-
-    
-    var myButton = player.controlBar.addChild('button', {}, 0);
-    var myButtonDom = myButton.el();
-    myButtonDom.innerHTML = '<span class="vjs-icon-spinner"></span>';
-    myButton.controlText("My Cancel Button");
-    myButtonDom.onclick = applySync;
+function showAlert() {
+    modal.open();
 }
 
 function applySync() {
@@ -200,6 +236,6 @@ const applySubtitleOffset = (offset = 0) => {
     console.log("Subtitles offset: ", subtitleOffset);
 }
 
-export default player;
-export {hotkeysConfig};
-export {applyPlayerSrc};
+export { hotkeysConfig };
+export { applyPlayerSrc };
+export { showAlert, setAlertContent };

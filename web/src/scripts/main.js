@@ -1,8 +1,14 @@
 import "../styles/style.css";
-import { getAvailableMadia } from "./getAvailableMadia.js";
-import player, { hotkeysConfig } from "./video-player.js";
+import { emitEvent, enableSanityCheck, handleEvent, playbackToggleAndEmit } from "./event-logic.js";
+import { hotkeysConfig, player } from "./video-player.js";
 import { io } from "socket.io-client";
 
+console.log(`Running prod: ${import.meta.env.PROD}`);
+export const SANITY_CHECK_PERIOD = 10 * 1000;
+export const TIME_DIFF_THRESHOLD = 3;
+
+const wsURL = import.meta.env.VITE_WEBSOCKET_BASE_URL;
+const URL = import.meta.env.VITE_MEDIA_BASE_URL;
 let queryString = window.location.search;
 let urlParams = new URLSearchParams(queryString);
 let roomId = urlParams.get("room");
@@ -10,20 +16,8 @@ let roomId = urlParams.get("room");
 if (!roomId) {
   window.location = "index.html";
 }
-let seekedTrigger = true;
 
-console.log(`Running prod: ${import.meta.env.PROD}`);
-if (!import.meta.env.PROD) {
-  window.player = player;
-  window.eventRegister = seekedTrigger;
-}
-const wsURL = import.meta.env.VITE_WEBSOCKET_BASE_URL;
-const URL = import.meta.env.VITE_MEDIA_BASE_URL;
-
-const sourceInput = document.getElementById('playerSrc');
-sourceInput.setAttribute("value", URL);
-
-const socket = io(wsURL, {
+export const socket = io(wsURL, {
   auth: { roomId },
   path: "/ws",
   timeout: 3000,
@@ -35,93 +29,31 @@ const socket = io(wsURL, {
   // withCredentials: true
 });
 
-// socket.on("connection", () => console.log("Connected to websocket !!"));
 
-// socket.on("connect_error", console.log);
+// ?????
+// if (!import.meta.env.PROD) {
+//   window.player = player;
+//   window.eventRegister = seekedTrigger;
+// }
 
-console.log(getAvailableMadia(URL));
+// init appropriate dev/prod source url placeholder
+const sourceInput = document.getElementById('playerSrc');
+sourceInput.setAttribute("value", URL);
 
+
+
+// socket.io event bullshit
 socket.on("getPlayerEvent", handleEvent);
 socket.on("room_users", (users) => {
   console.log("Users in the room:", users);
 });
 socket.on("newUserJoined", console.log);
+socket.on("user_exit", console.log);
 
-console.log(player);
+enableSanityCheck(SANITY_CHECK_PERIOD);
 
-function emitEvent(type, payload = {}) {
-  if (!seekedTrigger && type === "seeked") {
-    seekedTrigger = true;
-    console.log("Emit event aborted for: ", type);
-    return;
-  }
 
-  payload.timestamp = Date.now();
-
-  console.log("Sending event: ", type);
-  socket.emit("playerEvent", type, payload, (present) => {
-    // console.log("callback from server ??? A present: ", present);
-  });
-}
-
-let lastEventMillis = Date.now();
-const eventTimeoutPeriod = 100;
-
-function handleEvent(type, payload) {
-  const transportTime = Date.now() - payload.timestamp;
-  console.log(`Received event: ${type} in ${transportTime} ms, `, payload);
-  lastEventMillis = Date.now();
-  if (type === "seeked") {
-    seekedTrigger = false;
-  }
-
-  switch (type) {
-    case "pause":
-      player.pause();
-      break;
-    case "play":
-      player.play();
-      break;
-    case "seeked":
-      // const wasPlaying = !player.paused();
-
-      // if (wasPlaying) {
-      //   player.pause();
-      // }
-
-      player.currentTime(payload.time);
-
-      // if (wasPlaying) {
-      //   player.play();
-      // }
-
-      break;
-    case "sanityCheck":
-      const localTime = player.currentTime();
-      const remoteTime = payload.currentTime + transportTime / 1000;
-      const timeDiff = localTime - remoteTime;
-      console.log(
-        `${Math.abs(timeDiff) > 2 ? "!!!!!!!!!" : ""} TimeDiff: ${timeDiff}`
-      );
-      break;
-    default:
-      console.log("It's dicks isn't it. (it's: ", type, ")");
-      break;
-  }
-}
-
-function handleDataChannelOpen() {
-  setInterval(() => {
-    const payload = {
-      currentTime: player.currentTime(),
-    };
-    emitEvent("sanityCheck", payload);
-  }, 30 * 1000);
-  console.log("Events channel open");
-}
-
-// player.on('play', () => emitEvent('play'));
-// player.on('pause', () => emitEvent('pause'));
+// player event emit bullshit
 let userActions = {
   click: playbackToggleAndEmit,
   hotkeys: function (/** @type {KeyboardEvent}*/ event) {
@@ -141,19 +73,3 @@ player.on("seeked", () => {
   player.pause();
   emitEvent("seeked", { time: player.currentTime() });
 });
-// player.on("waiting", () => console.log("waiiiiiiiiiiiiiiiting"));
-// player.on("playing", () => console.log("playiiiiiiiiiiiiiiiiiiiiiiiing"));
-// player.on("seeking", () =>
-//   console.log("seeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeking")
-// );
-// player.on('timeupdate', () => console.log('TIIIIIIIIIIIIIIIIIIIIIIIIIME update'))
-
-function playbackToggleAndEmit() {
-  if (player.paused()) {
-    emitEvent("play");
-    player.play();
-  } else {
-    emitEvent("pause");
-    player.pause();
-  }
-}
