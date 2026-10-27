@@ -1,17 +1,28 @@
-# Video Chat with WebRTC and Firebase
+https://www.mux.com/articles/how-to-convert-mp4-to-hls-format-with-ffmpeg-a-step-by-step-guide
 
-Build a 1-to-1 video chat feature with WebRTC, Firestore, and JavaScript. 
+noip ddns kek.bounceme.net set to hamachi local ip
 
-Watch the [WebRTC Explanation on YouTube](https://youtu.be/WmR9IMUD_CY) and follow the full [WebRTC Firebase Tutorial](https://fireship.io/lessons/webrtc-firebase-video-chat) on Fireship.io. 
+create folder /hls/
 
+create folder with for each hls playlist inside 
 
-## Usage
+/hls/TIR_E01/
 
-Update the firebase project config in the main.js file. 
+    -master.m3u8
+    -v0/
+        -playlist.m3u8
+        -data.tls
 
-```
-git clone <this-repo>
-npm install
+create folder /nginx/certs/
 
-npm run dev
-```
+add crt.pem
+
+add key.pem
+
+docker compose up -d
+
+paste inside first input
+
+https://kek.bounceme.net/media/hls/TIR_E01/master.m3u8 
+
+select

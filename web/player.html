@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Webstream</title>
+    <!-- <link rel="stylesheet" href="style.css"> -->
+  </head>
+  <body>
+    <div id="video-container">
+      <video-js
+        id="my-video"
+        class="video-js"
+        data-setup="{}"
+        >
+        <p class="vjs-no-js">
+          To view this video please enable JavaScript, and consider upgrading to a web browser that
+          <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+        </p>
+      </video-js>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <h2>Select source directory</h2>
+
+        <div class="form-group">
+          <label for="directorySelect">Directory Item</label>
+          <select id="directorySelect">
+            <option value="" disabled selected>Select an item...</option>
+          </select>
+        </div>
+
+        <div class="button-group">
+          <button id="selectBtn">Select</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Manual source selection</h2>
+        
+        <div class="form-group">
+          <label for="playerSrc">Source URL</label>
+          <input id="playerSrc" type="text" value="http://localhost:8000/spongebob">
+        </div>
+
+        <div class="form-group">
+          <label for="playerSrcType">Source type</label>
+          <input id="playerSrcType" type="text" value="application/x-mpegURL">
+        </div>
+
+        <div class="button-group">
+          <button id="playerSrcSelect">Select</button>
+          <button id="loadYoutube">Load Youtube</button>
+        </div>
+      </div>
+    </div>
+
+    
+
+    <script type="module" src="src/scripts/video-player.js"></script>
+    <script type="module" src="src/scripts/selector.js"></script>
+    <script type="module" src="src/scripts/main.js"></script>
+    
+  </body>
+</html>
